@@ -68,14 +68,38 @@ public class ArrayListProductDao implements ProductDao {
     }
 
     @Override
-    public List<Product> findProducts() {
+    public List<Product> findProducts(String query, SortField field, SortOrder order) {
         if (productList == null) {
             return null;
         }
-        return productList.stream().filter(product -> (product.getStock() > 0)).filter(product->product.getPrice() != null)
+        return productList.stream()
+                .filter(product -> (product.getStock() > 0))
+                .filter(product->product.getPrice() != null)
+                .filter(product -> descriptionIsValid(query, product))
+//                .sorted(Comparator.comparing(product->{
+//                        if(field == SortField.price) {
+//                            if (order == SortOrder.asc) {
+//                                return product.getPrice();
+//                            } else {
+//                                return product.getPrice().negate();
+//                            }
+//                        }
+//                        if(field == SortField.description) {
+//                            if (order == SortOrder.asc) {
+//                                return product.getDescription();
+//                            } else {
+//                                return product.getDescription();
+//                            }
+//                        }
+//        }
+//                       ))
+                .sorted(new ProductComparator(field,order))
                 .collect(Collectors.toList());
     }
 
+    private boolean descriptionIsValid(String query, Product product){
+     return    query != null ? product.getDescription().contains(query):true;
+    }
     @Override
     public synchronized void save(Product product) {
         if (product.getId()==null) {
